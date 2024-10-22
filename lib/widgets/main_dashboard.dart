@@ -28,6 +28,7 @@ class _MainDashboardState extends State<MainDashboard> {
   // Controllers for data (use setState to modify) - with default values when needed
   dynamic moods; // to get all mood history
   dynamic todaysMood; 
+  dynamic dateMood;
   
   dynamic selectedUserTeam; // to get all informations (isManager boolean, team, ...)
   String userName = '';
@@ -35,6 +36,10 @@ class _MainDashboardState extends State<MainDashboard> {
   String teamName = '';
   Image userImage = Image(image: NetworkImage('https://petiteshistoiresdessciences.com/wp-content/uploads/2019/12/image-1.png'));
   String todaysDateFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+
+  String percentageForDate = '';
+  String tagForDate = '';
 
   // date config
   DateTime? _selectedDate;
@@ -80,6 +85,8 @@ class _MainDashboardState extends State<MainDashboard> {
           // print(moodsList);
           todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
           print(todaysMood);
+
+        
           
           
          
@@ -91,6 +98,52 @@ class _MainDashboardState extends State<MainDashboard> {
       print('Error fetching data: $error');
     }
   }
+
+  Future<void> getDatasForDate(String documentId, String dateSelected) async {
+    print('get datas method called');
+    final url = Uri.parse('http://localhost:1337/api/user-2s/' + documentId + '?populate=*');
+    const String token = '01622abb9cee851ac33e52935f57327301e841ecbeb33d436ec8ca003d55c930416b0c19279b96027bb09d63a65cbd1e3b9149ff5b08151c8383b0831fe1cd22cbfc8f51105e37d0d6b3a4d87cfc9ac33bd66c4e7272eb6b88dd458de4bf753d11d90c37b65e3926c6ebfd86ed486f3c11ff3cc9bf91435b5f03538a8ed478ba'; // Replace with your actual token
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        dynamic data = jsonDecode(response.body);
+        setState(() {
+          dynamic userDatas = data['data'];
+          // set controllers to the good values
+          moods = userDatas['moods'];
+          final moodsList = userDatas['moods'].toList();
+          // print(moodsList);
+          dateMood = moodsList.where((item)=> item['mood_datetime'] == dateSelected);
+          print(dateMood.toList()[0]);
+
+          if (dateMood != null){
+            print(dateSelected);
+            print('Mood has been found for this date');
+            print(dateMood);
+            tagForDate = dateMood.toList()[0]['tag'].toString();
+            percentageForDate = dateMood.toList()[0]['percentage'].toString();
+          }else{
+            tagForDate = 'Pas de mood pour cette date';
+            percentageForDate = 'Pas de mood pour cette date';
+          }
+
+
+        });
+      } else {
+        print('Failed to load data: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
+
+
+
 
   
   
@@ -106,6 +159,10 @@ class _MainDashboardState extends State<MainDashboard> {
     if (pickedDate != null && pickedDate != _selectedDate) {
       setState(() {
         _selectedDate = pickedDate;
+        final formattedDateForFunc = _dateFormatter.format(pickedDate);
+        
+        // _dateFormatter.format(_selectedDate!)
+        getDatasForDate(widget.documentIdForSelectedUser, formattedDateForFunc.toString());
       });
     }
   }
@@ -166,7 +223,7 @@ class _MainDashboardState extends State<MainDashboard> {
             SizedBox(height: 30,),
             
             // BLOC 1 : mood du jour (selon si la variable todaysMood est cide )
-            todaysMood != null ? TodaysMoodFilled() : MoodNotFilled(),
+            todaysMood != null ? TodaysMoodFilled(moodForToday: todaysMood,) : MoodNotFilled(),
             
 
             
@@ -185,6 +242,40 @@ class _MainDashboardState extends State<MainDashboard> {
                       padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
                       child: Text('Historique de vos moods', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15.0, 10, 15, 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF2A5F54),
+                          borderRadius: BorderRadius.circular(25)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Pourcentage : ' + percentageForDate,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF2A5F54),
+                borderRadius: BorderRadius.circular(20)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Tag : ' + tagForDate,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
                     Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: FilledButton(
@@ -236,9 +327,12 @@ class _MainDashboardState extends State<MainDashboard> {
 
 class TodaysMoodFilled extends StatefulWidget {
 
+  final moodForToday;
+
 
   const TodaysMoodFilled({
     super.key,
+    required this.moodForToday
     
   });
 
@@ -247,6 +341,24 @@ class TodaysMoodFilled extends StatefulWidget {
 }
 
 class _TodaysMoodFilledState extends State<TodaysMoodFilled> {
+
+  // controllers
+  String percentageToday = '';
+  String tagToday = '';
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setState(() {
+      percentageToday = widget.moodForToday.toList()[0]['percentage'].toString();
+      tagToday = widget.moodForToday.toList()[0]['tag'].toString();
+
+      
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -264,15 +376,39 @@ class _TodaysMoodFilledState extends State<TodaysMoodFilled> {
             child: Text('Votre mood du jour', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
           ),
           Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: FilledButton.icon(
-              
-              onPressed: (){
-                print('Add your mood for today');
-              }, 
-              icon: Icon(Icons.add), label: Text('Un mood existe déjà')
+            padding: const EdgeInsets.fromLTRB(15.0, 10, 15, 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF2A5F54),
+                borderRadius: BorderRadius.circular(25)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Pourcentage : '+percentageToday,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ),
-          )
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF2A5F54),
+                borderRadius: BorderRadius.circular(20)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Tag : '+tagToday,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
