@@ -52,6 +52,9 @@ class _MainDashboardState extends State<MainDashboard> {
   // Fetch to get all datas concerning the user
   Future<void> getDatas(String documentId) async {
 
+    // Reset value to be sure to get back the good view (MoodFilled or not)
+    todaysMood = null;
+
     print('get datas method called');
 
     final url = Uri.parse('http://localhost:1337/api/user-2s/' + documentId + '?populate=*');
@@ -84,16 +87,22 @@ class _MainDashboardState extends State<MainDashboard> {
           userStrapiId = userDatas['id'];
 
           final moodsList = userDatas['moods'].toList();
-          // print(moodsList);
-          if ((moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted)) != null ){
-            todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
-            moodFound = true;
-          }else{
+
+          // Check is there is a mood and change the value of the bool
+          //moodsList.isEmpty ? moodFound = true : moodFound = false;
+  
+          if ((moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted)).isEmpty ){
+            print('No mood found for this date');
             todaysMood = null;
             moodFound = false;
+            
+          }else{
+            print('mood found for this date');
+            todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
+            moodFound = true;
           }
-          
 
+        
         
          
         });
@@ -227,7 +236,7 @@ class _MainDashboardState extends State<MainDashboard> {
             ],),
             SizedBox(height: 30,),
             
-            // BLOC 1 : mood du jour (selon si la variable todaysMood est cide )
+            // BLOC 1 : mood du jour (selon si la variable todaysMood est vide )
             moodFound == false ? MoodNotFilled(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId,) : TodaysMoodFilled(moodForToday: todaysMood,),
 
             // TODO: dev en cours - a changer
