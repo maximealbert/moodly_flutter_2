@@ -4,7 +4,6 @@
 // ignore_for_file: prefer_const_constructors, avoid_print, prefer_interpolation_to_compose_strings
 
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Since you're using DateFormat
 import 'package:http/http.dart' as http;
@@ -28,15 +27,19 @@ class _MainDashboardState extends State<MainDashboard> {
 
   // Controllers for data (use setState to modify) - with default values when needed
   dynamic moods; // to get all mood history
+  dynamic todaysMood; 
+  
   dynamic selectedUserTeam; // to get all informations (isManager boolean, team, ...)
   String userName = '';
   String userFirstName = '';
   String teamName = '';
   Image userImage = Image(image: NetworkImage('https://petiteshistoiresdessciences.com/wp-content/uploads/2019/12/image-1.png'));
+  String todaysDateFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
   // date config
   DateTime? _selectedDate;
-  final DateFormat _dateFormatter = DateFormat('dd-MM-yyyy');
+  final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
+  
 
 
 
@@ -67,13 +70,15 @@ class _MainDashboardState extends State<MainDashboard> {
           print(selectedUserTeam);
           userFirstName = userDatas['firstname'];
           userName = userDatas['name'];
-          //TODO: add profile picture recuperation (documentId and route on Strapi) - fetch on the new route
           final userProfilePictureLvlOne = userDatas['userProfilePicture'];
           final userPPLvlTwo = userProfilePictureLvlOne['formats'];
           final userPPMedium = userPPLvlTwo['medium'];
-          print(userPPLvlTwo);
           final urlImage = 'http://localhost:1337' + userPPMedium['url'];
           userImage = Image(image: NetworkImage(urlImage,));
+
+          moods = userDatas['moods'].toList();
+          
+          
          
         });
       } else {
@@ -108,6 +113,7 @@ class _MainDashboardState extends State<MainDashboard> {
     print('Init state method called');
     getDatas(widget.documentIdForSelectedUser);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -156,31 +162,10 @@ class _MainDashboardState extends State<MainDashboard> {
             ],),
             SizedBox(height: 30,),
             
-            // BLOC 1 : mood du jour
-            Container(
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0), color: Color(0xFFD4DFDD),),
-              
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
-                    child: Text('Votre mood du jour', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: FilledButton.icon(
-                      
-                      onPressed: (){
-                        print('Add your mood for today');
-                      }, 
-                      icon: Icon(Icons.add), label: Text('Ajouter votre mood du jour')
-                    ),
-                  )
-                ],
-              ),
-            ),
+            // BLOC 1 : mood du jour (selon si la variable todaysMood est cide )
+            // todaysMood != null ? TodaysMoodFilled() : MoodNotFilled(),
+            TodaysMoodFilled(),
+            
 
             // BLOC 2 : historique des moods 
             Padding(
@@ -240,5 +225,94 @@ class _MainDashboardState extends State<MainDashboard> {
            
         ],),
       ));
+  }
+  
+ 
+}
+
+class TodaysMoodFilled extends StatefulWidget {
+
+
+  const TodaysMoodFilled({
+    super.key,
+    
+  });
+
+  @override
+  State<TodaysMoodFilled> createState() => _TodaysMoodFilledState();
+}
+
+class _TodaysMoodFilledState extends State<TodaysMoodFilled> {
+  @override
+  Widget build(BuildContext context) {
+
+
+
+      return Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0), color: Color(0xFFD4DFDD),),
+      
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
+            child: Text('Votre mood du jour', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: FilledButton.icon(
+              
+              onPressed: (){
+                print('Add your mood for today');
+              }, 
+              icon: Icon(Icons.add), label: Text('Un mood existe déjà')
+            ),
+          )
+        ],
+      ),
+    );
+    
+
+    
+  }
+}
+
+class MoodNotFilled extends StatefulWidget {
+  const MoodNotFilled({super.key});
+
+  @override
+  State<MoodNotFilled> createState() => _MoodNotFilledState();
+}
+
+class _MoodNotFilledState extends State<MoodNotFilled> {
+  @override
+  Widget build(BuildContext context) {
+    
+      // No mood filled, add mood button is shown
+      return Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0), color: Color(0xFFD4DFDD),),
+      
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
+            child: Text('Votre mood du jour', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: FilledButton.icon(
+              
+              onPressed: (){
+                print('Add your mood for today');
+              }, 
+              icon: Icon(Icons.add), label: Text('Ajouter votre mood du jour')
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
