@@ -89,7 +89,7 @@ class _MainDashboardState extends State<MainDashboard> {
           final moodsList = userDatas['moods'].toList();
 
           // Check is there is a mood and change the value of the bool
-          //moodsList.isEmpty ? moodFound = true : moodFound = false;
+          moodsList.isEmpty ? moodFound = true : moodFound = false;
   
           if ((moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted)).isEmpty ){
             print('No mood found for this date');

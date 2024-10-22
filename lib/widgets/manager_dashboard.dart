@@ -70,7 +70,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
       if (response.statusCode == 200) {
         dynamic data = jsonDecode(response.body);
-        setState(() {
+        setState(()  {
           dynamic userDatas = data['data'];
           // set controllers to the good values
           moods = userDatas['moods'];
@@ -88,15 +88,39 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
           userImage = Image(image: NetworkImage(urlImage,));
           userStrapiId = userDatas['id'];
 
+          });
         
 
           // Get the list of all users Id in the team (including the manager)
-          // make the request http://localhost:1337/api/teams/f38mv9wdew19j2v7fdi162t4?populate=* with the teamDocumentId
+          // make the request http://localhost:1337/api/teams/f38mv9wdew19j2v7fdi162t4?populate=* with the teamDOcu
           dynamic idUsersInTeam;
+
+          final urlTeams = Uri.parse("http://localhost:1337/api/teams" + teamDocumentId + '?populate=*');  
+          try {
+            final responseTeam = await http.get(urlTeams, headers: {
+          'Authorization': 'Bearer $token',
+            },);
+
+            if (responseTeam.statusCode == 200 || responseTeam.statusCode == 201){
+              print('No error fetching teams');
+              dynamic dataTeam = jsonDecode(responseTeam.body);
+              setState(() {
+                dynamic dataTeams = dataTeam['data'];
+                for (dynamic team in dataTeam){
+                  //TODO : recupere les données de la team. il faut récupérer les données des utilisateurs et du manager
+                    print(team);
+                }
+
+              });
+            }
+
+          }catch (error) {
+              print('Error fetching teams : $error');
+          }
 
 
          
-        });
+        
       } else {
         print('Failed to load data: ${response.statusCode}');
       }
