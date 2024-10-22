@@ -1,5 +1,4 @@
 // lib/widgets/main_dashboard.dart
-// 
 
 // ignore_for_file: prefer_const_constructors, avoid_print, prefer_interpolation_to_compose_strings
 
@@ -15,8 +14,6 @@ class MainDashboard extends StatefulWidget {
     super.key, 
     required this.documentIdForSelectedUser,
   });
-
-  
 
 
   @override
@@ -83,12 +80,14 @@ class _MainDashboardState extends State<MainDashboard> {
 
           final moodsList = userDatas['moods'].toList();
           // print(moodsList);
-          todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
-          print(todaysMood);
+          if ((moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted)) != null ){
+            todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
+          }else{
+            todaysMood = null;
+          }
+          
 
         
-          
-          
          
         });
       } else {
@@ -170,6 +169,7 @@ class _MainDashboardState extends State<MainDashboard> {
   // Override the initState void to call a method everytime when the widget is loaded
   @override
   void  initState (){
+    todaysMood = null;
     print('Init state method called');
     getDatas(widget.documentIdForSelectedUser);
   }
@@ -352,10 +352,18 @@ class _TodaysMoodFilledState extends State<TodaysMoodFilled> {
     // TODO: implement initState
     super.initState();
     setState(() {
-      percentageToday = widget.moodForToday.toList()[0]['percentage'].toString();
-      tagToday = widget.moodForToday.toList()[0]['tag'].toString();
+      print('HEREEEE ');
+      print(widget.moodForToday);
 
-      
+      if (widget.moodForToday.isEmpty){
+        print('Null value founded');
+      }else{
+        percentageToday = widget.moodForToday.toList()[0]['percentage'].toString();
+         tagToday = widget.moodForToday.toList()[0]['tag'].toString();
+      }
+
+     
+
     });
   }
 
@@ -446,7 +454,23 @@ class _MoodNotFilledState extends State<MoodNotFilled> {
             child: FilledButton.icon(
               
               onPressed: (){
-                print('Add your mood for today');
+                showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Dialog Title'),
+                          content: Text('This is a modal dialog.'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: Text('Close'),
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Ferme la boîte de dialogue
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
               }, 
               icon: Icon(Icons.add), label: Text('Ajouter votre mood du jour')
             ),
