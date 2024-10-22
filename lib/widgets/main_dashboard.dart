@@ -42,6 +42,9 @@ class _MainDashboardState extends State<MainDashboard> {
   // date config
   DateTime? _selectedDate;
   final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
+
+  // boolean if a mood has been founded for today (first launch)
+  bool moodFound = false;
   
 
 
@@ -84,8 +87,10 @@ class _MainDashboardState extends State<MainDashboard> {
           // print(moodsList);
           if ((moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted)) != null ){
             todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
+            moodFound = true;
           }else{
             todaysMood = null;
+            moodFound = false;
           }
           
 
@@ -171,8 +176,6 @@ class _MainDashboardState extends State<MainDashboard> {
   // Override the initState void to call a method everytime when the widget is loaded
   @override
   void  initState (){
-    todaysMood = null;
-    print('Init state method called');
     getDatas(widget.documentIdForSelectedUser);
   }
 
@@ -219,16 +222,16 @@ class _MainDashboardState extends State<MainDashboard> {
               
               
               IconButton(onPressed: (){
-                print('Hello world');
+                getDatas(widget.documentIdForSelectedUser);
               }, icon: Icon(Icons.notifications_active))
             ],),
             SizedBox(height: 30,),
             
             // BLOC 1 : mood du jour (selon si la variable todaysMood est cide )
-            //todaysMood != null ? TodaysMoodFilled(moodForToday: todaysMood,) : MoodNotFilled(),
+            moodFound == false ? MoodNotFilled(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId,) : TodaysMoodFilled(moodForToday: todaysMood,),
 
             // TODO: dev en cours - a changer
-            MoodNotFilled(documentId: widget.documentIdForSelectedUser, userStrapiId : userStrapiId),
+            //MoodNotFilled(documentId: widget.documentIdForSelectedUser, userStrapiId : userStrapiId),
             
 
             
@@ -358,8 +361,6 @@ class _TodaysMoodFilledState extends State<TodaysMoodFilled> {
     // TODO: implement initState
     super.initState();
     setState(() {
-      print('HEREEEE ');
-      print(widget.moodForToday);
 
       if (widget.moodForToday.isEmpty){
         print('Null value founded');
@@ -506,6 +507,9 @@ class _MoodNotFilledState extends State<MoodNotFilled> {
     if (response.statusCode == 200 || response.statusCode == 201){
         // Response OK
         // perform actions here 
+
+        final temp = jsonDecode(response.body);
+        print(temp['data']);
         Navigator.of(context).pop();
     }else{
       print("Failed to add mood : ${response.body}");
