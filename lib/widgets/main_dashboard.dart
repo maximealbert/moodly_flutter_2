@@ -76,7 +76,10 @@ class _MainDashboardState extends State<MainDashboard> {
           final urlImage = 'http://localhost:1337' + userPPMedium['url'];
           userImage = Image(image: NetworkImage(urlImage,));
 
-          moods = userDatas['moods'].toList();
+          final moodsList = userDatas['moods'].toList();
+          // print(moodsList);
+          todaysMood = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted);
+          print(todaysMood);
           
           
          
@@ -163,8 +166,9 @@ class _MainDashboardState extends State<MainDashboard> {
             SizedBox(height: 30,),
             
             // BLOC 1 : mood du jour (selon si la variable todaysMood est cide )
-            // todaysMood != null ? TodaysMoodFilled() : MoodNotFilled(),
-            TodaysMoodFilled(),
+            todaysMood != null ? TodaysMoodFilled() : MoodNotFilled(),
+            
+
             
 
             // BLOC 2 : historique des moods 
