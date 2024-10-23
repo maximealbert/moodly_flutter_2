@@ -364,7 +364,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
             
             // BLOC 1 : mood du jour (selon si la variable todaysMood est vide )
             GlobalMoodToday(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId, userInfos: selectedUserInfos, teamName: teamName, todaysMoodForUser: usersInTeamPercentageForToday, todaysTagsForUser: usersInTeamTagsForToday, averageMood: averagePercentageForToday,),
-            Text(averageByDate.toString()),
+            MoodHistory(moodsByDate: averageByDate),
             
             
            
@@ -392,7 +392,7 @@ class GlobalMoodToday extends StatefulWidget {
 }
 
 class _GlobalMoodTodayState extends State<GlobalMoodToday> {
-
+  
   
   // date config
   DateTime? _selectedDate;
@@ -473,6 +473,55 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+
+class MoodHistory extends StatefulWidget {
+
+  
+  final moodsByDate;
+  const MoodHistory({super.key, required this.moodsByDate});
+
+  @override
+  State<MoodHistory> createState() => _MoodHistoryState();
+}
+
+class _MoodHistoryState extends State<MoodHistory> {
+  @override
+  Widget build(BuildContext context) {
+
+    print(widget.moodsByDate);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(5, 15, 5, 10),
+      child: Container(
+        
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0), color: Color(0xFFD4DFDD),),
+        width: double.infinity,
+        
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Padding(
+                padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
+                child: Text("Mood sur 30 jours ", style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+              // LIST VIEW VUILDER
+              widget.moodsByDate.isEmpty == true ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('Pas de moods enregistrés sur les 30 derniers jours'),
+              ) : Padding(
+                padding: const EdgeInsets.fromLTRB(15, 8, 15, 10),
+                child: Text(widget.moodsByDate.toString()),
+              )
+              
+              
+      
+            ],
+          ),
       ),
     );
   }
