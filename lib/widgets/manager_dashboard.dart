@@ -3,7 +3,7 @@
 // ignore_for_file: prefer_const_constructors, avoid_print, prefer_interpolation_to_compose_strings, unused_field, unused_local_variable
 
 import 'dart:convert';
-import 'dart:js_interop';
+import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Since you're using DateFormat
 import 'package:http/http.dart' as http;
@@ -56,6 +56,10 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   List usersInTeamTagsForToday = [];
   double averagePercentageForToday = 0.0;
   List <Map<String, dynamic>> moodsThirtyDays = [];
+
+  // list to show an average percentage by date
+  Map<String, double> averageByDate = {};
+  int numberOfDaysWithDate = 0;
 
   
 
@@ -209,6 +213,8 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
     averagePercentageForToday = (sum/usersInTeamPercentageForToday.length).toDouble();
     print(averagePercentageForToday);
 
+    getDatasForThirtyDays(usersInTeamStrapiId);
+
 
      //print('All percentages for users mood : ' + usersInTeamPercentageForToday.toString());
 
@@ -217,31 +223,88 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
   Future<void> getDatasForThirtyDays(List usersId) async{
 
-    for (dynamic user in usersId){
-      print(user);
+
+    // get the date of 30 days from now on
+    final DateTime today = DateTime.now();
+    final DateTime thirtyDaysAgo = today.subtract(Duration(days: 30));
+
+    // Formater la date en "YYYY-MM-DD"
+    String formattedDate = "${thirtyDaysAgo.year}-${thirtyDaysAgo.month.toString().padLeft(2, '0')}-${thirtyDaysAgo.day.toString().padLeft(2, '0')}";
+
+    String userIdsFilter = usersId.map((id) => "filters[user][id][\$in]=$id").join('&');
+     final String url = Uri.encodeFull("http://localhost:1337/api/moods"
+      "?filters[mood_datetime][\$gte]=$formattedDate"
+      "&populate=*"
+      "&$userIdsFilter");
+      
+    const String token = '01622abb9cee851ac33e52935f57327301e841ecbeb33d436ec8ca003d55c930416b0c19279b96027bb09d63a65cbd1e3b9149ff5b08151c8383b0831fe1cd22cbfc8f51105e37d0d6b3a4d87cfc9ac33bd66c4e7272eb6b88dd458de4bf753d11d90c37b65e3926c6ebfd86ed486f3c11ff3cc9bf91435b5f03538a8ed478ba'; // Replace with your actual token
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          "Content-Type": "application/json; charset=UTF-8"
+        },
+      );
+
+      // Check StatusCode
+      if (response.statusCode == 200 || response.statusCode == 201){
+        dynamic newData = jsonDecode(response.body);
+        dynamic moods = newData['data'];
+
+        for (dynamic mood in moods){
+         
+          final dataToAdd = {"percentage" : mood['percentage'], "date" : mood['mood_datetime']};
+          moodsThirtyDays.add(dataToAdd);
+        }
+
+        Map<String, List<int>> percentageByDate = {};
+
+        setState(() {
+          for (var mood in moodsThirtyDays) {
+          String date = mood['date'];
+          int percentage = mood['percentage'];
+
+          // Si la date existe déjà, ajoute le pourcentage à la liste
+          if (percentageByDate.containsKey(date)) {
+            percentageByDate[date]?.add(percentage);
+          } else {
+            // Sinon, crée une nouvelle entrée pour cette date
+            percentageByDate[date] = [percentage];
+          }
+        }
+
+        // Calculer la moyenne pour chaque date
+        
+        percentageByDate.forEach((date, percentages) {
+          double average = percentages.reduce((a, b) => a + b) / percentages.length;
+          averageByDate[date] = average;
+        });
+
+        // 
+        numberOfDaysWithDate = averageByDate.length;
+
+        // Afficher les moyennes par date
+        averageByDate.forEach((date, avgPercentage) {
+          print("Date: $date, Average Percentage: ${avgPercentage.toStringAsFixed(2)}");
+        });
+        });
+
+        
+
+      }else{
+        print("no data founded");
+      }
+
+    }catch(err){
+      print('Error in this fetch to get data from the 30 last days $err');
     }
-
-    print(usersId);
     
-    // final url = Uri.parse('http://localhost:1337/api/user-2s/' + usersId[0] + '?populate=*');
-    // const String token = '01622abb9cee851ac33e52935f57327301e841ecbeb33d436ec8ca003d55c930416b0c19279b96027bb09d63a65cbd1e3b9149ff5b08151c8383b0831fe1cd22cbfc8f51105e37d0d6b3a4d87cfc9ac33bd66c4e7272eb6b88dd458de4bf753d11d90c37b65e3926c6ebfd86ed486f3c11ff3cc9bf91435b5f03538a8ed478ba'; // Replace with your actual token
-
-    // try {
-    //   final response = await http.get(
-    //     url,
-    //     headers: {
-    //       'Authorization': 'Bearer $token',
-    //     },
-    //   );
-    // }catch(err){
-    //   print('Error in this fetch to get data from the 30 last days $err');
-    // }
-
-    // perform the fetch request 
-
-    // populate the new variables 
 
   }
+
+
 
 
   // Override the initState void to call a method everytime when the widget is loaded
@@ -293,15 +356,15 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
               
               
               IconButton(onPressed: (){
-                getDatasForThirtyDays([66, 67, 68, 69 ]);
+                getDatas(widget.documentIdForSelectedUser);
                 
               }, icon: Icon(Icons.notifications_active))
             ],),
             SizedBox(height: 30,),
             
             // BLOC 1 : mood du jour (selon si la variable todaysMood est vide )
-            GlobalMoodToday(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId, userInfos: selectedUserInfos, teamName: teamName, todaysMoodForUser: usersInTeamPercentageForToday, todaysTagsForUser: usersInTeamTagsForToday, averageMood: averagePercentageForToday,)
-
+            GlobalMoodToday(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId, userInfos: selectedUserInfos, teamName: teamName, todaysMoodForUser: usersInTeamPercentageForToday, todaysTagsForUser: usersInTeamTagsForToday, averageMood: averagePercentageForToday,),
+            Text(averageByDate.toString()),
             
             
            
