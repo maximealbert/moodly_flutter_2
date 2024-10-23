@@ -74,7 +74,7 @@ class _MainDashboardState extends State<MainDashboard> {
           dynamic userDatas = data['data'];
           // set controllers to the good values
           moods = userDatas['moods'];
-          selectedUserTeam = userDatas['team'];
+          selectedUserTeam = userDatas['team'][0];
           teamName = selectedUserTeam['Name'];
           print(selectedUserTeam);
           userFirstName = userDatas['firstname'];

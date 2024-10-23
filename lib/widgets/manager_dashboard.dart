@@ -45,6 +45,14 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
   // boolean if a mood has been founded for today (first launch)
   bool moodFound = false;
+
+
+  // Controllers for all users in team (including the manager)
+  List usersInTeamDocumentId = [];
+  List usersInTeamName = [];
+  List usersInTeamPercentageForGivenDate = [];
+  List usersInTeamTagsForGivenDate = [];
+
   
 
 
@@ -74,7 +82,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
           dynamic userDatas = data['data'];
           // set controllers to the good values
           moods = userDatas['moods'];
-          selectedUserTeam = userDatas['team'];
+          selectedUserTeam = userDatas['team'][0];
           selectedUserInfos = userDatas;
           teamName = selectedUserTeam['Name'];
           teamDocumentId = selectedUserTeam['documentId'];
@@ -88,6 +96,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
           userImage = Image(image: NetworkImage(urlImage,));
           userStrapiId = userDatas['id'];
 
+
           });
         
 
@@ -95,7 +104,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
           // make the request http://localhost:1337/api/teams/f38mv9wdew19j2v7fdi162t4?populate=* with the teamDOcu
           dynamic idUsersInTeam;
 
-          final urlTeams = Uri.parse("http://localhost:1337/api/teams" + teamDocumentId + '?populate=*');  
+          final urlTeams = Uri.parse("http://localhost:1337/api/teams/" + teamDocumentId + '?populate=*');  
           try {
             final responseTeam = await http.get(urlTeams, headers: {
           'Authorization': 'Bearer $token',
@@ -104,14 +113,45 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
             if (responseTeam.statusCode == 200 || responseTeam.statusCode == 201){
               print('No error fetching teams');
               dynamic dataTeam = jsonDecode(responseTeam.body);
-              setState(() {
+              setState(()  {
                 dynamic dataTeams = dataTeam['data'];
-                for (dynamic team in dataTeam){
+                dynamic usersInTeam = dataTeams['users'];
+                print(usersInTeam);
+                for (dynamic user in usersInTeam){
                   //TODO : recupere les données de la team. il faut récupérer les données des utilisateurs et du manager
-                    print(team);
+                    //print(user['documentId']);
+                    usersInTeamDocumentId.add(user['documentId']);
+                    final userNameFirstName = user['name'] + ' ' + user['firstname'];
+                    usersInTeamName.add(userNameFirstName);
+                    
                 }
 
-              });
+
+                });
+
+
+                // do the fetch request to get the mood for today for each user
+                for (var index = 0; index <= usersInTeamDocumentId.length; index ++){
+                    final url = Uri.parse('http://localhost:1337/api/user-2s/' + documentId + '?populate=*');
+                
+                    try {
+                      final response = await http.get(
+                        url,
+                        headers: {
+                          'Authorization': 'Bearer $token',
+                        },
+                      );
+
+
+
+                    }catch (error){
+                        print('Error getting the mood for each user $error');
+                    }
+                }
+
+               
+
+              
             }
 
           }catch (error) {
