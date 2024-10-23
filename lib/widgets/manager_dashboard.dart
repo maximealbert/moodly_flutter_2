@@ -50,8 +50,9 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   // Controllers for all users in team (including the manager)
   List usersInTeamDocumentId = [];
   List usersInTeamName = [];
-  List usersInTeamPercentageForGivenDate = [];
-  List usersInTeamTagsForGivenDate = [];
+  List usersInTeamPercentageForToday = [];
+  List usersInTeamTagsForToday = [];
+  double averagePercentageForToday = 0.0;
 
   
 
@@ -59,6 +60,8 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
   // Fetch to get all datas concerning the user
   Future<void> getDatas(String documentId) async {
+
+    
 
     // Reset value to be sure to get back the good view (MoodFilled or not)
     todaysMood = null;
@@ -117,6 +120,12 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                 dynamic dataTeams = dataTeam['data'];
                 dynamic usersInTeam = dataTeams['users'];
                 print(usersInTeam);
+
+                usersInTeamPercentageForToday.clear();
+                usersInTeamTagsForToday.clear();
+                
+        
+
                 for (dynamic user in usersInTeam){
                   //TODO : recupere les données de la team. il faut récupérer les données des utilisateurs et du manager
                     //print(user['documentId']);
@@ -128,38 +137,13 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
 
                 });
-
-
-                // do the fetch request to get the mood for today for each user
-                for (var index = 0; index <= usersInTeamDocumentId.length; index ++){
-                    final url = Uri.parse('http://localhost:1337/api/user-2s/' + documentId + '?populate=*');
-                
-                    try {
-                      final response = await http.get(
-                        url,
-                        headers: {
-                          'Authorization': 'Bearer $token',
-                        },
-                      );
-
-
-
-                    }catch (error){
-                        print('Error getting the mood for each user $error');
-                    }
-                }
-
-               
-
               
             }
 
           }catch (error) {
               print('Error fetching teams : $error');
           }
-
-
-         
+  
         
       } else {
         print('Failed to load data: ${response.statusCode}');
@@ -167,6 +151,65 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
     } catch (error) {
       print('Error fetching data: $error');
     }
+
+
+
+
+    //do the fetch request to get the mood for today for each user
+    for (dynamic userDocId in usersInTeamDocumentId){
+        final url = Uri.parse('http://localhost:1337/api/user-2s/' + userDocId + '?populate=*');
+    
+        try {
+          final response = await http.get(
+            url,
+            headers: {
+              'Authorization': 'Bearer $token',
+            },
+          );
+
+          dynamic responseBody = jsonDecode(response.body);
+          dynamic selectedUserData = responseBody['data'];
+          dynamic selectedUserMoods = selectedUserData['moods'];
+
+          print(selectedUserMoods);
+
+          // if : check if there is a mood for today
+          dynamic moodsList = selectedUserMoods.toList();
+
+          // Check is there is a mood and change the value of the bool
+
+          setState(() {
+            if ((moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted)).isNotEmpty ){
+           
+            final percentageSelected = moodsList.where((item)=> item['mood_datetime'] == todaysDateFormatted).toList()[0]['percentage'];
+            final tagSelected = moodsList.where((item) => item['mood_datetime'] == todaysDateFormatted).toList()[0]['tag'];
+            usersInTeamPercentageForToday.add(percentageSelected);
+            usersInTeamTagsForToday.add(tagSelected);
+            }
+          });
+  
+          
+
+
+
+        }catch (error){
+            print('Error getting the mood for each user $error');
+        }
+    }
+
+    dynamic sum = 0;
+    // Calculate the average percentage
+    for (dynamic perc in usersInTeamPercentageForToday){
+      sum += perc;
+    }
+    print(sum);
+    averagePercentageForToday = (sum/usersInTeamPercentageForToday.length).toDouble();
+    print(averagePercentageForToday);
+
+
+     //print('All percentages for users mood : ' + usersInTeamPercentageForToday.toString());
+
+
   }
 
 
@@ -221,13 +264,13 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
               
               
               IconButton(onPressed: (){
-                getDatas(widget.documentIdForSelectedUser);
+                
               }, icon: Icon(Icons.notifications_active))
             ],),
             SizedBox(height: 30,),
             
             // BLOC 1 : mood du jour (selon si la variable todaysMood est vide )
-            GlobalMoodToday(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId, userInfos: selectedUserInfos, teamName: teamName)
+            GlobalMoodToday(documentId: widget.documentIdForSelectedUser, userStrapiId: userStrapiId, userInfos: selectedUserInfos, teamName: teamName, todaysMoodForUser: usersInTeamPercentageForToday, todaysTagsForUser: usersInTeamTagsForToday, averageMood: averagePercentageForToday,)
 
             
             
@@ -239,114 +282,17 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
  
 }
 
-class TodaysMoodFilled extends StatefulWidget {
-
-  final moodForToday;
-
-
-  const TodaysMoodFilled({
-    super.key,
-    required this.moodForToday
-    
-  });
-
-  @override
-  State<TodaysMoodFilled> createState() => _TodaysMoodFilledState();
-}
-
-class _TodaysMoodFilledState extends State<TodaysMoodFilled> {
-
-
-  // controllers
-  String percentageToday = '';
-  String tagToday = '';
-
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setState(() {
-
-      if (widget.moodForToday.isEmpty){
-        print('Null value founded');
-      }else{
-        percentageToday = widget.moodForToday.toList()[0]['percentage'].toString();
-         tagToday = widget.moodForToday.toList()[0]['tag'].toString();
-      }
-
-     
-
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
-
-
-      return Container(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0), color: Color(0xFFD4DFDD),),
-      
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
-            child: Text('Votre mood du jour', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(15.0, 10, 15, 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF2A5F54),
-                borderRadius: BorderRadius.circular(25)
-               
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  'Pourcentage : '+percentageToday,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF2A5F54),
-                borderRadius: BorderRadius.circular(20)
-               
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  'Tag : '+tagToday,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    
-
-    
-  }
-}
-
 class GlobalMoodToday extends StatefulWidget {
 
   final documentId;
   final userStrapiId;
   final userInfos;
   final teamName;
+  final todaysMoodForUser;
+  final todaysTagsForUser ;
+  final averageMood;
 
-  const GlobalMoodToday({super.key, required this.documentId, required this.userStrapiId, required this.userInfos, required this.teamName});
+  const GlobalMoodToday({super.key, required this.documentId, required this.userStrapiId, required this.userInfos, required this.teamName, required this.todaysMoodForUser, required this.todaysTagsForUser, required this.averageMood});
 
   @override
   State<GlobalMoodToday> createState() => _GlobalMoodTodayState();
@@ -366,6 +312,7 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
   @override
   Widget build(BuildContext context) {
     
+    
       // No mood filled, add mood button is shown
       return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0), color: Color(0xFFD4DFDD),),
@@ -376,18 +323,62 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
         children: [
            Padding(
             padding: EdgeInsets.fromLTRB(15.0, 15, 15,0),
-            child: Text("Mood de l\'équipe " + widget.teamName.toString(), style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text("Mood de l\'équipe " + widget.teamName.toString() + ' pour aujourd\'hui', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          
+          Padding(
+                      padding: const EdgeInsets.fromLTRB(15.0, 10, 15, 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF2A5F54),
+                          borderRadius: BorderRadius.circular(25)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'État général : ' + widget.averageMood.toString() + ' %',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+          
+          
+          Padding(
+                      padding: const EdgeInsets.fromLTRB(15.0, 10, 15, 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF2A5F54),
+                          borderRadius: BorderRadius.circular(25)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Pourcentage : ' + widget.todaysMoodForUser.toString() ,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: FilledButton.icon(
-              
-              onPressed: (){
-                  print('Button pressed');
-                }, 
-              icon: Icon(Icons.add), label: Text('Ajouter votre mood du jour')
+                      padding: const EdgeInsets.fromLTRB(15.0, 5, 15, 15),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF2A5F54),
+                          borderRadius: BorderRadius.circular(25)
+               
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Tags : ' + widget.todaysTagsForUser.toString(),
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
