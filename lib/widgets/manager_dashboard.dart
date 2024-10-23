@@ -3,6 +3,7 @@
 // ignore_for_file: prefer_const_constructors, avoid_print, prefer_interpolation_to_compose_strings, unused_field, unused_local_variable
 
 import 'dart:convert';
+import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Since you're using DateFormat
 import 'package:http/http.dart' as http;
@@ -49,10 +50,12 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
   // Controllers for all users in team (including the manager)
   List usersInTeamDocumentId = [];
+  List usersInTeamStrapiId = [];
   List usersInTeamName = [];
   List usersInTeamPercentageForToday = [];
   List usersInTeamTagsForToday = [];
   double averagePercentageForToday = 0.0;
+  List <Map<String, dynamic>> moodsThirtyDays = [];
 
   
 
@@ -132,7 +135,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                     usersInTeamDocumentId.add(user['documentId']);
                     final userNameFirstName = user['name'] + ' ' + user['firstname'];
                     usersInTeamName.add(userNameFirstName);
-                    
+                    usersInTeamStrapiId.add(user['id']);
                 }
 
 
@@ -212,7 +215,33 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
 
   }
 
+  Future<void> getDatasForThirtyDays(List usersId) async{
 
+    for (dynamic user in usersId){
+      print(user);
+    }
+
+    print(usersId);
+    
+    // final url = Uri.parse('http://localhost:1337/api/user-2s/' + usersId[0] + '?populate=*');
+    // const String token = '01622abb9cee851ac33e52935f57327301e841ecbeb33d436ec8ca003d55c930416b0c19279b96027bb09d63a65cbd1e3b9149ff5b08151c8383b0831fe1cd22cbfc8f51105e37d0d6b3a4d87cfc9ac33bd66c4e7272eb6b88dd458de4bf753d11d90c37b65e3926c6ebfd86ed486f3c11ff3cc9bf91435b5f03538a8ed478ba'; // Replace with your actual token
+
+    // try {
+    //   final response = await http.get(
+    //     url,
+    //     headers: {
+    //       'Authorization': 'Bearer $token',
+    //     },
+    //   );
+    // }catch(err){
+    //   print('Error in this fetch to get data from the 30 last days $err');
+    // }
+
+    // perform the fetch request 
+
+    // populate the new variables 
+
+  }
 
 
   // Override the initState void to call a method everytime when the widget is loaded
@@ -264,6 +293,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
               
               
               IconButton(onPressed: (){
+                getDatasForThirtyDays([66, 67, 68, 69 ]);
                 
               }, icon: Icon(Icons.notifications_active))
             ],),
@@ -356,7 +386,7 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Text(
-                  'Pourcentage : ' + widget.todaysMoodForUser.toString() ,
+                  'Pourcentages : ' + widget.todaysMoodForUser.join(', ') ,
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -373,7 +403,7 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Text(
-                  'Tags : ' + widget.todaysTagsForUser.toString(),
+                  'Tags : ' + widget.todaysTagsForUser.join(', '),
                   style: TextStyle(color: Colors.white),
                 ),
               ),
