@@ -195,14 +195,14 @@ class _MainDashboardState extends State<MainDashboard> {
   Widget build(BuildContext context) {
 
 
-    Future<void> _addIdea(String idea) async {
-    final url = Uri.parse('https://localhost:1337/api/ideas'); // Replace with your Strapi URL and endpoint
+    Future<void> addIdea(String idea) async {
+    final url = Uri.parse('http://localhost:1337/api/ideas'); // Replace with your Strapi URL and endpoint
 
     // Data to send in the POST request
-    final Map<String, dynamic> ideaData = {
+    final textttt = textValueIdea.text;
+    final ideaData = {
       'data': {
-        'idea': textValueIdea.value, // Assuming the Strapi model has a 'title' field
-        // Add more fields as necessary, based on your Strapi model
+        'idea': textttt, // Assuming the Strapi model has a 'title' field
       }
     };
 
@@ -211,7 +211,7 @@ class _MainDashboardState extends State<MainDashboard> {
         url,
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': '01622abb9cee851ac33e52935f57327301e841ecbeb33d436ec8ca003d55c930416b0c19279b96027bb09d63a65cbd1e3b9149ff5b08151c8383b0831fe1cd22cbfc8f51105e37d0d6b3a4d87cfc9ac33bd66c4e7272eb6b88dd458de4bf753d11d90c37b65e3926c6ebfd86ed486f3c11ff3cc9bf91435b5f03538a8ed478ba', // Uncomment if authentication is required
+          'Authorization': 'Bearer 01622abb9cee851ac33e52935f57327301e841ecbeb33d436ec8ca003d55c930416b0c19279b96027bb09d63a65cbd1e3b9149ff5b08151c8383b0831fe1cd22cbfc8f51105e37d0d6b3a4d87cfc9ac33bd66c4e7272eb6b88dd458de4bf753d11d90c37b65e3926c6ebfd86ed486f3c11ff3cc9bf91435b5f03538a8ed478ba', // Uncomment if authentication is required
         },
         body: jsonEncode(ideaData),
       );
@@ -259,6 +259,8 @@ class _MainDashboardState extends State<MainDashboard> {
             TextButton.icon(onPressed: (){Navigator.of(context).pop();}, icon: Icon(Icons.close), label: Text('Annuler')),
             TextButton.icon(onPressed: (){
               // call method here to add the mood to Strapi
+              addIdea(textValueIdea.text);
+              Navigator.of(context).pop();
               
             }, icon: Icon(Icons.add), label: Text('Enregistrer')),
           ],

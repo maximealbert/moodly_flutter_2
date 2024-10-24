@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 // Import widgets for BottomNavigationBar
 import 'main_dashboard.dart';
-import 'team_dashboard.dart';
+import 'idea_view.dart';
 import 'survey.dart';
 import 'profile.dart';
 import 'manager_dashboard.dart';
@@ -44,7 +44,7 @@ class _NavigationBottomNavBarManagerState
 
     // Toutes les pages à inclure dans le widget
     MainDashboard(documentIdForSelectedUser: widget.documentIdForSelectedUser,),
-    TeamDashboard(documentIdForSelectedUser: widget.documentIdForSelectedUser,),
+    IdeaView(documentIdForSelectedUser: widget.documentIdForSelectedUser,),
     RSESurvey(documentIdForSelectedUser: widget.documentIdForSelectedUser,),
     Profil(documentIdForSelectedUser: widget.documentIdForSelectedUser,),
     ManagerDashboard(documentIdForSelectedUser: widget.documentIdForSelectedUser,),
@@ -66,8 +66,8 @@ class _NavigationBottomNavBarManagerState
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Équipe',
+            icon: Icon(Icons.lightbulb),
+            label: 'Idées',
             backgroundColor:Color(0xFF2A5F54)
           ),
           BottomNavigationBarItem(
