@@ -3,7 +3,6 @@
 // ignore_for_file: prefer_const_constructors, avoid_print, prefer_interpolation_to_compose_strings, unused_field, unused_local_variable
 
 import 'dart:convert';
-import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Since you're using DateFormat
 import 'package:http/http.dart' as http;
@@ -429,10 +428,8 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  'État général : ' + widget.averageMood.toString() + ' %',
-                  style: TextStyle(color: Colors.white),
-                ),
+                // child : widget.averageMood.toString != null ? Text('État général : ' + widget.averageMood.toString() + ' %', style: TextStyle(color: Colors.white),), : Text('Pas de moods renseignés pour aujourd\'hui' , style: TextStyle(color: Colors.white),),
+                child: Text('État général : ' + widget.averageMood.toString() + ' %', style: TextStyle(color: Colors.white),),
               ),
             ),
           ),
@@ -461,7 +458,6 @@ class _GlobalMoodTodayState extends State<GlobalMoodToday> {
                         decoration: BoxDecoration(
                           color: Color(0xFF2A5F54),
                           borderRadius: BorderRadius.circular(25)
-               
               ),
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -517,9 +513,6 @@ class _MoodHistoryState extends State<MoodHistory> {
                 padding: const EdgeInsets.fromLTRB(15, 8, 15, 10),
                 child: Text(widget.moodsByDate.toString()),
               )
-              
-              
-      
             ],
           ),
       ),
